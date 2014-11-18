@@ -27,28 +27,31 @@ def main():
         patty = Pattern([], [])
         patty.nodes.append(i)
         for j in range(0, len(one_hop[0])):
-            if(one_hop[i][j] == 1):
-                patty.candidate.append(j)
+            if j > i:
+                if(one_hop[i][j] == 1):
+                    patty.candidate.append(j)
         pattyArray.append(patty)
 
-    #display candidates for each node in graph that are 1 hop
-
-
-
+    '''
+    #display candidates for each node in graph that are 2 hop
     for i in two_hop:
         for j in i:
             print(j, " ", end="")
         print("\n")
+    '''
 
-    #HERE IS WHERE IM WORKING
-    #add candidates from two_hop array
+    #add candidates from two_hop array while sorting them while you add them
+    #WE MIGHT NOT NEED TO SORT THE CANIDATES WHEN WE ADD THEM###########################################
     for i in range(0, len(two_hop[0])):
         for j in range(0, len(two_hop[0])):
             if two_hop[i][j] > 0:
-                if two_hop[i][j] not in pattyArray[j].candidate:
-                    #print(" j: ", j, "|| i ", i)
-                    pattyArray[j].candidate.append(two_hop[i][j])
+                if j > i:
+                    if j not in pattyArray[i].candidate:
+                        pattyArray[i].candidate.append(j)
+                        pattyArray[i].candidate.sort()
 
+
+    # display nodes and their canidates that are two hops away
     for p in pattyArray:
         for n in p.getNode():
             print("Node ", n, ":")
@@ -56,7 +59,6 @@ def main():
             print(c, " ", end="")
         print("\n")
 
-    #display candidates for each node in graph that are 1 and 2 hops
 
 
 

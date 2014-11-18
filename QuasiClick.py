@@ -11,12 +11,16 @@ def main():
     file1.close()
     one_hop = g.get_adjacency().data
     one_h = numpy.array(one_hop)
-    two_hop = one_h * one_h
+    two_hop = numpy.zeros((len(one_h[0]), len(one_h[0])))
     pattyArray = []
 
 
 
-
+    #this multiplies two arrays
+    for row in range(0, len(one_hop[0])):
+        for row2 in range(0, len(one_hop[0])):
+            for col in range(0, len(one_hop[0])):
+                two_hop[row][row2] += one_hop[row][col] * one_hop[col][row2]
 
     #add candidates from one_hop array
     for i in range(0, len(one_hop[0])):
@@ -29,33 +33,35 @@ def main():
 
     #display candidates for each node in graph that are 1 hop
 
-    '''
-    for p in pattyArray:
-        for n in p.getNode():
-            print("Node ", n, ":")
-        for c in p.getCandidate():
-            print(c, " ", end="")
+
+
+    for i in two_hop:
+        for j in i:
+            print(j, " ", end="")
         print("\n")
-    '''
 
     #HERE IS WHERE IM WORKING
     #add candidates from two_hop array
     for i in range(0, len(two_hop[0])):
         for j in range(0, len(two_hop[0])):
             if two_hop[i][j] > 0:
-                if pattyArray[j].candidate.contains(two_hop[i][j]):
-                    print("here")
-                else:
+                if two_hop[i][j] not in pattyArray[j].candidate:
+                    #print(" j: ", j, "|| i ", i)
                     pattyArray[j].candidate.append(two_hop[i][j])
 
-
+    for p in pattyArray:
+        for n in p.getNode():
+            print("Node ", n, ":")
+        for c in p.getCandidate():
+            print(c, " ", end="")
+        print("\n")
 
     #display candidates for each node in graph that are 1 and 2 hops
 
 
 
     #find the maximized
-    #for patt in level1:
+    #for patt in Pattern.level1:
     #   Pattern.findMaximized(patt)
 
 

@@ -37,6 +37,8 @@ def main():
             print(c, " ", end="")
         print("\n")
     '''
+
+    #HERE IS WHERE IM WORKING
     #add candidates from two_hop array
     for i in range(0, len(two_hop[0])):
         for j in range(0, len(two_hop[0])):

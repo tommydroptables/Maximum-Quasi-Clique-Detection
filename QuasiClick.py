@@ -12,7 +12,7 @@ def main():
     one_hop = g.get_adjacency().data
     one_h = numpy.array(one_hop)
     two_hop = numpy.zeros((len(one_h[0]), len(one_h[0])))
-    pattyArray = []
+    pattyArray2Hop = []
 
 
 
@@ -30,7 +30,7 @@ def main():
             if j > i:
                 if(one_hop[i][j] == 1):
                     patty.candidate.append(j)
-        pattyArray.append(patty)
+        pattyArray2Hop.append(patty)
 
     '''
     #display candidates for each node in graph that are 2 hop
@@ -46,55 +46,18 @@ def main():
         for j in range(0, len(two_hop[0])):
             if two_hop[i][j] > 0:
                 if j > i:
-                    if j not in pattyArray[i].candidate:
-                        pattyArray[i].candidate.append(j)
-                        pattyArray[i].candidate.sort()
+                    if j not in pattyArray2Hop[i].candidate:
+                        pattyArray2Hop[i].candidate.append(j)
+                        pattyArray2Hop[i].candidate.sort()
 
 
-    # display nodes and their canidates that are two hops away
-    for p in pattyArray:
-        for n in p.getNode():
-            print("Node ", n, ":")
-        for c in p.getCandidate():
-            print(c, " ", end="")
-        print("\n")
-
-
-
-
+    #HERE IS WHERE WE HAVE TO WORK NEXT
     #find the maximized
-    #for patt in Pattern.level1:
-    #   Pattern.findMaximized(patt)
+    Pattern.set2Hop(pattyArray2Hop)
 
+    for patt in pattyArray2Hop:
+       Pattern.findMaximized(patt)
 
-   # two_hop = numpy.zeros((8, 8))
-
-    '''
-    #this multiplies two arrays
-    for row in range(0, len(one_hop[0])):
-        for row2 in range(0, len(one_hop[0])):
-            for col in range(0, len(one_hop[0])):
-                two_hop[row][row2] += one_hop[row][col] * one_hop[col][row2]
-    '''
-    #add all the candidates for each node in level one to level on array
-    #by making pattern objects then adding them to the level1 array
-
-
-    #display adjacency matrix
-    '''
-    for i in one_hop:
-        for j in i:
-            print(j, " ", end="")
-        print("\n")
-
-    #Display two_hops matrix
-    #http://puu.sh/cUyrj/c5909616bd.png
-    #http://puu.sh/cUyrj/c5909616bd.png
-    for i in two_hop:
-        for j in i:
-            print(j, " ", end="")
-        print("\n")
-    '''
 
     #display graph with iGraph
     layout = g.layout("kk")

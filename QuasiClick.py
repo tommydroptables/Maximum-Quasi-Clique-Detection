@@ -63,7 +63,7 @@ class QuasiClick():
         for patt in self.pattyArray2Hop:
             self.findMaximized(patt)
 
-        '''
+
         #display candidates for each node in maximized
         for patttt in self.maximizedArray:
             print("\nNodes: ", end="")
@@ -72,7 +72,7 @@ class QuasiClick():
             print("\nCandidates: ", end="")
             for can in patttt.candidate:
                 print(can, " ", end="")
-        '''
+
         #display graph with iGraph
         layout = g.layout("kk")
         #create labels
@@ -85,38 +85,49 @@ class QuasiClick():
 
     #check if each node in the maximal clique is up to our standards in percentage
     def isQuasi(self, tempPattern):
-        maximalClique = tempPattern.nodes
-        print("You are in the maximal Method")
-        self.maximizedArray.append(tempPattern)
+        notfound = True
+        for maximalPattern in self.maximizedArray:
+            if set (tempPattern.nodes).issuperset(maximalPattern.nodes):
+                self.maximizedArray.replace(maximalPattern, tempPattern)
+                notfound = False
+            elif set (maximalPattern.nodes).issuperset(tempPattern.nodes):
+                return 0
+        if notfound:
+            self.maximizedArray.append(tempPattern)
+
+
 
 
     #p is a object of the Pattern class
+
+
+    #re-write sudo code for this section!!!!!!!!!!!
+
+
     def findMaximized(self, p):
         #THE PROBLEM IS THAT WE ARE REMOVING ELEMENTS FROM THE LIST CANDIDATES AND LOOPING THROUGH THE SAME LIST
         stay = True
 
-        while  (len(p.candidate) != 0) and stay :
-            for candidate_of_p in p.candidate.copy():
-                #get the candidates of i from the 2 hop array
-                pCandidate = candidate_of_p
-                level1twoHopCandidates = self.pattyArray2Hop[pCandidate]
-                test1 = level1twoHopCandidates.candidate
+        for candidate_of_p in p.candidate.copy():
+            #get the candidates of i from the 2 hop array
+            level1twoHopCandidates = self.pattyArray2Hop[candidate_of_p]
+            test1 = level1twoHopCandidates.candidate[:]
 
-                if(len(self.findIntersection(p.candidate, test1)) == 0):
-                    self.isQuasi(p)
-                    stay = False
-                    break
+            if(len(self.findIntersection(p.candidate, test1)) == 0):
+                self.isQuasi(p)
+                stay = False
+                break
 
-                #here we may need to check if the pattern above this node is a quasi.  Which would be removing the last element from the array
-                else:
-                    pCandidateNew = candidate_of_p
-                    level1twoHopCandidatesNew = self.pattyArray2Hop[pCandidateNew]
-                    candidate_of_candidate = level1twoHopCandidatesNew.candidate
+            #here we may need to check if the pattern above this node is a quasi.  Which would be removing the last element from the array
+            else:
+                level1twoHopCandidatesNew = self.pattyArray2Hop[candidate_of_p]
+                candidate_of_candidate = level1twoHopCandidatesNew.candidate[:]
+                pnodes_recursive = p.nodes[:]
+                pnodes_recursive.append(candidate_of_p)
 
-                    p.nodes.append(candidate_of_p)
-                    pat = Pattern(p.nodes, self.findIntersection(p.candidate, candidate_of_candidate))
-                    p.candidate.remove(candidate_of_p)
-                    self.findMaximized(pat)
+                pat = Pattern(pnodes_recursive, self.findIntersection(p.candidate, candidate_of_candidate))
+                #p.candidate.remove(candidate_of_p)
+                self.findMaximized(pat)
 
     def findIntersection(self, a, b):
         return set(a).intersection(b)

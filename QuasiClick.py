@@ -11,7 +11,7 @@ class QuasiClick():
 
     percent = 0
     def main(self):
-        global percent
+        global percent 
         percent = float (input("Enter the quasi percentage"))
         file1 = open('C:\\Users\\Tom\\PycharmProjects\\Quasi\\poop.txt', 'r')
         g = igraph.Graph.Read_Ncol(file1,names=True,directed=False,weights=False)

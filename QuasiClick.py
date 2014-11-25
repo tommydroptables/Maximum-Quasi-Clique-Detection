@@ -3,14 +3,16 @@ __author__ = 'Tom'
 
 import re, string, sys, igraph, numpy
 from Patterns import Pattern
-
+from RowF import RowFound
 class QuasiClick():
     def __init__(self, tempMax, temp2Hop):
         self.maximizedArray = tempMax
         self.pattyArray2Hop = temp2Hop
 
+    percent = 0
     def main(self):
-
+        global percent
+        percent = float (input("Enter the quasi percentage"))
         file1 = open('C:\\Users\\Tom\\PycharmProjects\\Quasi\\poop.txt', 'r')
         g = igraph.Graph.Read_Ncol(file1,names=True,directed=False,weights=False)
         file1.close()
@@ -18,7 +20,10 @@ class QuasiClick():
         one_h = numpy.array(one_hop)
         two_hop = numpy.zeros((len(one_h[0]), len(one_h[0])))
 
-
+        for i in one_hop:
+            for j in i:
+                print(j, " ", end="")
+            print("\n")
 
         #this multiplies two arrays
         for row in range(0, len(one_hop[0])):
@@ -61,7 +66,7 @@ class QuasiClick():
         '''
 
         for patt in self.pattyArray2Hop:
-            self.findMaximized(patt)
+            self.findMaximized(patt, one_hop)
 
 
         #display candidates for each node in maximized
@@ -81,6 +86,39 @@ class QuasiClick():
         igraph.plot(g, layout=layout, vertex_label=label)
 
 
+    def coieficOf(self, adjacency_mat, nodes):
+        TOTAL = 0
+        top = 0
+        #TOTAL = start
+        # this takes each node and finds the correlation coefficient and adds it to the total
+        for i in nodes:
+            row = RowFound(i, [])
+            #finds all the index that have 1's
+            for index in range(0, len(adjacency_mat[0])):
+                if adjacency_mat[i][index] == 1:
+                    row.candidate.append(index)
+            top = 0.0
+            #calculates how many neighbors are friends
+            for can in row.candidate:
+                for index, rowAdj in enumerate(adjacency_mat[can]):
+                    if rowAdj == 1 and adjacency_mat[row.row][index] == 1:
+                        top += 1
+            #keep
+            bottom = ( len(row.candidate) * (len(row.candidate) - 1))
+            if bottom < 1:
+                bottom = 1
+
+            tots =  ((top/2) / (bottom / 2))
+
+            #calculates the correlation coefficient for the node
+
+            TOTAL = (TOTAL + tots)
+        TOTAL= TOTAL / len(adjacency_mat[0])
+        print(TOTAL, " HERERERERER")
+        if TOTAL > percent:
+            return True
+        else:
+            return False
 
 
     #check if each node in the maximal clique is up to our standards in percentage
@@ -104,35 +142,37 @@ class QuasiClick():
     #re-write sudo code for this section!!!!!!!!!!!
 
 
-    def findMaximized(self, p):
+    def findMaximized(self, p, one_hop_local):
         #THE PROBLEM IS THAT WE ARE REMOVING ELEMENTS FROM THE LIST CANDIDATES AND LOOPING THROUGH THE SAME LIST
         stay = True
-
+        print("Node", end="")
+        for n in p.nodes:
+            print(n, end="")
+        print("\n")
         for candidate_of_p in p.candidate.copy():
             #get the candidates of i from the 2 hop array
             level1twoHopCandidates = self.pattyArray2Hop[candidate_of_p]
             test1 = level1twoHopCandidates.candidate[:]
 
-            if(len(self.findIntersection(p.candidate, test1)) == 0):
+            #here we may need to check if the pattern above this node is a quasi.  Which would be removing the last element from the array
+            level1twoHopCandidatesNew = self.pattyArray2Hop[candidate_of_p]
+            candidate_of_candidate = level1twoHopCandidatesNew.candidate[:]
+            pnodes_recursive = p.nodes[:]
+            pnodes_recursive.append(candidate_of_p)
+
+            pat = Pattern(pnodes_recursive, self.findIntersection(p.candidate, candidate_of_candidate))
+            self.findMaximized(pat, one_hop_local)
+
+            #if(len(self.findIntersection(p.candidate, test1)) == 0):
+            if self.coieficOf( one_hop_local, p.nodes):
                 self.isQuasi(p)
                 stay = False
                 break
 
-            #here we may need to check if the pattern above this node is a quasi.  Which would be removing the last element from the array
-            else:
-                level1twoHopCandidatesNew = self.pattyArray2Hop[candidate_of_p]
-                candidate_of_candidate = level1twoHopCandidatesNew.candidate[:]
-                pnodes_recursive = p.nodes[:]
-                pnodes_recursive.append(candidate_of_p)
-
-                pat = Pattern(pnodes_recursive, self.findIntersection(p.candidate, candidate_of_candidate))
-                #p.candidate.remove(candidate_of_p)
-                self.findMaximized(pat)
-
     def findIntersection(self, a, b):
         return set(a).intersection(b)
 
-# run main
+# run main~
 if  __name__ =='__main__':
     q = QuasiClick([], [])
     q.main()

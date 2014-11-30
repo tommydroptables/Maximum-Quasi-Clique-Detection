@@ -1,9 +1,12 @@
 __author__ = 'Tom'
 
 
-import re, string, sys, igraph, numpy
+import re, string, sys, igraph, numpy, random, threading
 from Patterns import Pattern
 from RowF import RowFound
+from threading import Semaphore
+lock = Semaphore()
+
 class QuasiClick():
     def __init__(self, tempMax, temp2Hop):
         self.maximizedArray = tempMax
@@ -12,8 +15,9 @@ class QuasiClick():
     percent = 0
     def main(self):
         global percent
+        colors = ["blue", "green", "yellow", "purple", "orange", "white"]
         percent = float (input("Enter the quasi percentage\n"))
-        file1 = open('C:\\Users\\Tom\\PycharmProjects\\Quasi\\poop.txt', 'r')
+        file1 = open('C:\\Users\\Tom\\PycharmProjects\\Quasi\\HcNetwork.txt', 'r')
         g = igraph.Graph.Read_Ncol(file1,names=True,directed=False,weights=False)
         file1.close()
         one_hop = g.get_adjacency().data
@@ -64,14 +68,20 @@ class QuasiClick():
                 print(j , " ", end="")
             print("\n")
         '''
+        thread = []
 
         for patt in self.pattyArray2Hop:
-            self.findMaximized(patt, one_hop)
+            t = threading.Thread(target=self.findMaximized ,args =( patt,one_hop))
+            thread.append(t)
+            t.start()
+            #self.findMaximized(patt, one_hop)
+        for j in thread:
+            j.join()
 
         for pattty in self.maximizedArray:
             print("++ Nodes: ", end="")
             for node in pattty.nodes:
-                print(node, end="")
+                print(node," ", end="")
             print("\n")
 
         #display candidates for each node in maximized
@@ -88,7 +98,27 @@ class QuasiClick():
         layout = g.layout("kk")
         #create labels
         label = []
+        myColours = []
+        #set the default color to red
+        for i in range(0, (len(one_hop[0]))): str(myColours.append("red"))
+
         for i in range(0, (len(one_hop[0]))): str(label.append(i))
+
+        #the bellow for loop applies the colors the the quasi cliques
+        used_colors = []
+        for pattty in self.maximizedArray:
+            #get a new color that is not used
+            rand_color = random.choice(colors)
+            while rand_color in used_colors:
+                rand_color = random.choice(colors)
+
+            #apply that color to those nodes in that clique
+            for node in pattty.nodes:
+                myColours[node] = rand_color
+                used_colors.append(rand_color)
+        #set colors of graph from colors set in the above for loop
+
+        g.vs['color']= myColours
         igraph.plot(g, layout=layout, vertex_label=label)
 
     #Finds the Clustering Coefficient of the nodes that are passed to it

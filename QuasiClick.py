@@ -11,20 +11,20 @@ class QuasiClick():
 
     percent = 0
     def main(self):
-        global percent 
-        percent = float (input("Enter the quasi percentage"))
+        global percent
+        percent = float (input("Enter the quasi percentage\n"))
         file1 = open('C:\\Users\\Tom\\PycharmProjects\\Quasi\\poop.txt', 'r')
         g = igraph.Graph.Read_Ncol(file1,names=True,directed=False,weights=False)
         file1.close()
         one_hop = g.get_adjacency().data
         one_h = numpy.array(one_hop)
         two_hop = numpy.zeros((len(one_h[0]), len(one_h[0])))
-
+        '''
         for i in one_hop:
             for j in i:
                 print(j, " ", end="")
             print("\n")
-
+        '''
         #this multiplies two arrays
         for row in range(0, len(one_hop[0])):
             for row2 in range(0, len(one_hop[0])):
@@ -68,8 +68,14 @@ class QuasiClick():
         for patt in self.pattyArray2Hop:
             self.findMaximized(patt, one_hop)
 
+        for pattty in self.maximizedArray:
+            print("++ Nodes: ", end="")
+            for node in pattty.nodes:
+                print(node, end="")
+            print("\n")
 
         #display candidates for each node in maximized
+        '''
         for patttt in self.maximizedArray:
             print("\nNodes: ", end="")
             for nod in patttt.nodes:
@@ -77,7 +83,7 @@ class QuasiClick():
             print("\nCandidates: ", end="")
             for can in patttt.candidate:
                 print(can, " ", end="")
-
+        '''
         #display graph with iGraph
         layout = g.layout("kk")
         #create labels
@@ -85,37 +91,46 @@ class QuasiClick():
         for i in range(0, (len(one_hop[0]))): str(label.append(i))
         igraph.plot(g, layout=layout, vertex_label=label)
 
-
+    #Finds the Clustering Coefficient of the nodes that are passed to it
     def coieficOf(self, adjacency_mat, nodes):
         TOTAL = 0
         top = 0
-        #TOTAL = start
+
         # this takes each node and finds the correlation coefficient and adds it to the total
         for i in nodes:
             row = RowFound(i, [])
             #finds all the index that have 1's
             for index in range(0, len(adjacency_mat[0])):
-                if adjacency_mat[i][index] == 1:
+                if adjacency_mat[i][index] == 1 and index in nodes:
                     row.candidate.append(index)
-            top = 0.0
+
+            top = 0
+            length_of_row = 0
             #calculates how many neighbors are friends
+            #calculates the top of the correlation coefficient equation
             for can in row.candidate:
                 for index, rowAdj in enumerate(adjacency_mat[can]):
-                    if rowAdj == 1 and adjacency_mat[row.row][index] == 1:
+                    #each node has nodes in common but they are not the ones we are looking for ************************************
+                    if rowAdj == 1 and adjacency_mat[row.row][index] == 1 and index in nodes:
                         top += 1
-            #keep
-            bottom = ( len(row.candidate) * (len(row.candidate) - 1))
-            if bottom < 1:
+                if can in nodes:
+                    length_of_row += 1
+
+            #calculates the bottom of the correlation coefficient equation
+            bottom = ( length_of_row * (length_of_row - 1))
+            if bottom == 0:
                 bottom = 1
+
 
             tots =  ((top/2) / (bottom / 2))
 
-            #calculates the correlation coefficient for the node
-
+            #calculates the correlation coefficient for the node and saves it to TOTAL
             TOTAL = (TOTAL + tots)
-        TOTAL= TOTAL / len(adjacency_mat[0])
-        print(TOTAL, " HERERERERER")
-        if TOTAL > percent:
+        lenth = len(nodes)
+
+        #once it is all calculated TOTAL is the correlation coefficient of the nodes that are passed to this function
+        TOTAL = TOTAL / lenth
+        if TOTAL > (percent / 100):
             return True
         else:
             return False
@@ -124,10 +139,12 @@ class QuasiClick():
     #check if each node in the maximal clique is up to our standards in percentage
     def isQuasi(self, tempPattern):
         notfound = True
-        for maximalPattern in self.maximizedArray:
+        for index, maximalPattern in enumerate(self.maximizedArray):
             if set (tempPattern.nodes).issuperset(maximalPattern.nodes):
-                self.maximizedArray.replace(maximalPattern, tempPattern)
+                self.maximizedArray.pop(index)
+                self.maximizedArray.append(tempPattern)
                 notfound = False
+                break
             elif set (maximalPattern.nodes).issuperset(tempPattern.nodes):
                 return 0
         if notfound:
@@ -136,19 +153,10 @@ class QuasiClick():
 
 
 
-    #p is a object of the Pattern class
 
-
-    #re-write sudo code for this section!!!!!!!!!!!
-
-
+    # Finds the maximized nodes
     def findMaximized(self, p, one_hop_local):
         #THE PROBLEM IS THAT WE ARE REMOVING ELEMENTS FROM THE LIST CANDIDATES AND LOOPING THROUGH THE SAME LIST
-        stay = True
-        print("Node", end="")
-        for n in p.nodes:
-            print(n, end="")
-        print("\n")
         for candidate_of_p in p.candidate.copy():
             #get the candidates of i from the 2 hop array
             level1twoHopCandidates = self.pattyArray2Hop[candidate_of_p]
@@ -160,14 +168,20 @@ class QuasiClick():
             pnodes_recursive = p.nodes[:]
             pnodes_recursive.append(candidate_of_p)
 
-            pat = Pattern(pnodes_recursive, self.findIntersection(p.candidate, candidate_of_candidate))
+            pat = Pattern(pnodes_recursive, list(self.findIntersection(p.candidate, candidate_of_candidate)))
             self.findMaximized(pat, one_hop_local)
+            #print("length: ", len(p.candidate))
+            if(len(self.findIntersection(p.candidate, test1)) == 0):
+            #if self.coieficOf( one_hop_local, p.nodes):
+                if(self.coieficOf(one_hop_local, p.nodes)):
+                    self.isQuasi(p)
+                if len(p.candidate) > 0:
+                    tempNodes = p.nodes[:]
+                    tempNodes.extend(p.candidate)
+                    pat1 = Pattern(tempNodes, [])
+                    if(self.coieficOf(one_hop_local, pat1.nodes)):
+                        self.isQuasi(pat1)
 
-            #if(len(self.findIntersection(p.candidate, test1)) == 0):
-            if self.coieficOf( one_hop_local, p.nodes):
-                self.isQuasi(p)
-                stay = False
-                break
 
     def findIntersection(self, a, b):
         return set(a).intersection(b)

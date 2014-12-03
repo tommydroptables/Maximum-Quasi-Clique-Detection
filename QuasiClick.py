@@ -1,25 +1,34 @@
+import multiprocessing
+
 __author__ = 'Tom'
 
 
-import re, string, sys, igraph, numpy, random, threading
+import re, string, sys, igraph, numpy, random#, threading
 from Patterns import Pattern
 from RowF import RowFound
-from threading import Semaphore
-lock = Semaphore()
+#from threading import Semaphore
+import multiprocessing
+import decimal
+from multiprocessing import Process, Value, Semaphore, Manager
+
+lock = multiprocessing.Semaphore()
 
 class QuasiClick():
     def __init__(self, tempMax, temp2Hop):
-        self.maximizedArray = tempMax
+        manager = Manager()
+        self.maximizedArray = manager.list()
+        self.maximizedArray.extend(tempMax)
         self.pattyArray2Hop = temp2Hop
 
-    percent = 0
-    def main(self):
-        global percent
-        colors = ["blue", "green", "yellow", "purple", "orange", "white", "gray", "cyan", "sienna", "coral", "plum"]
-        percent = float (input("Enter the quasi percentage\n"))
-        num_threads = int (input("Enter the number of threads\n"))
 
-        file1 = open('C:\\Users\\Tom\\PycharmProjects\\Quasi\\poop.txt', 'r')
+    def main(self):
+
+        colors = ["blue", "green", "yellow", "purple", "orange", "white", "gray", "cyan", "sienna", "coral", "plum"]
+        temp = decimal.Decimal (input("Enter the quasi percentage\n"))
+        percent = Value('d', temp)
+        num_threads = int (input("Enter the number of processes\n"))
+
+        file1 = open('C:\\Users\\Tom\\PycharmProjects\\Quasi\\HcNetwork.txt', 'r')
         g = igraph.Graph.Read_Ncol(file1,names=True, directed=False, weights=False)
         file1.close()
         one_hop = g.get_adjacency().data
@@ -42,7 +51,6 @@ class QuasiClick():
                     if(one_hop[i][j] == 1):
                         patty.candidate.append(j)
             self.pattyArray2Hop.append(patty)
-            print("TEst")
 
 
 
@@ -69,12 +77,13 @@ class QuasiClick():
             local_stop = (local_n * index) + local_n
             if(index == num_threads - 1):
                 local_stop = len(one_hop) - 1
-            t = threading.Thread(target= self.thread_maximized, args=(local_start, local_stop, one_hop))
+            t = Process(target= self.thread_maximized, args=(local_start, local_stop, one_hop, percent))
             thread.append(t)
             t.start()
-            #self.findMaximized(patt, one_hop)
+
         for j in thread:
             j.join()
+                #self.findMaximized(patt, one_hop)
 
         for pattty in self.maximizedArray:
             print("++ Nodes: ", end="")
@@ -111,17 +120,18 @@ class QuasiClick():
 
 
 
-    def thread_maximized(self, start, stop, one_hoppy_hop):
+    def thread_maximized(self, start, stop, one_hoppy_hop, percenty):
         for i in range(start, stop):
-            print("index: ", i, " Start: ", start, " Stop: ", stop)
-            self.findMaximized( self.pattyArray2Hop[i], one_hoppy_hop)
+            #print("index: ", i, " Start: ", start, " Stop: ", stop, " Length: ", len(one_hoppy_hop[0]), " length: ", len(self.pattyArray2Hop))
+            self.findMaximized( self.pattyArray2Hop[i], one_hoppy_hop, percenty)
 
 
 
 
 
     #Finds the Clustering Coefficient of the nodes that are passed to it
-    def coieficOf(self, adjacency_mat, nodes):
+    def coieficOf(self, adjacency_mat, nodes, percenttt):
+        #print("ADj len: ",len(adjacency_mat[0]), " Nodes: ", nodes, " Percent: ", percenttt.value )
         TOTAL = 0
         top = 0
         # this takes each node and finds the correlation coefficient and adds it to the total
@@ -155,7 +165,7 @@ class QuasiClick():
 
         #once it is all calculated TOTAL is the correlation coefficient of the nodes that are passed to this function
         TOTAL = TOTAL / lenth
-        if TOTAL > (percent / 100):
+        if TOTAL > (percenttt.value / 100):
             return True
         else:
             return False
@@ -167,6 +177,7 @@ class QuasiClick():
 
     #check if each node in the maximal clique is up to our standards in percentage
     def isQuasi(self, tempPattern):
+        #print("Node: ", tempPattern.nodes, "Candidate: ", tempPattern.candidate, " Length: ", len(self.maximizedArray))
         notfound = True
         for index, maximalPattern in enumerate(self.maximizedArray):
             if set (tempPattern.nodes).issuperset(maximalPattern.nodes):
@@ -184,7 +195,8 @@ class QuasiClick():
 
 
     # Finds the maximized nodes
-    def findMaximized(self, p, one_hop_local):
+    def findMaximized(self, p, one_hop_local, percentt):
+        #print("Nodes: ", p.nodes, " Candidate: ", p.candidate, " Length: ", len(one_hop_local[0]), " Percent: ", percentt.value)
         #THE PROBLEM IS THAT WE ARE REMOVING ELEMENTS FROM THE LIST CANDIDATES AND LOOPING THROUGH THE SAME LIST
         for candidate_of_p in p.candidate.copy():
             #get the candidates of i from the 2 hop array
@@ -198,17 +210,17 @@ class QuasiClick():
             pnodes_recursive.append(candidate_of_p)
 
             pat = Pattern(pnodes_recursive, list(self.findIntersection(p.candidate, candidate_of_candidate)))
-            self.findMaximized(pat, one_hop_local)
+            self.findMaximized(pat, one_hop_local, percentt)
             #print("length: ", len(p.candidate))
             if(len(self.findIntersection(p.candidate, test1)) == 0):
             #if self.coieficOf( one_hop_local, p.nodes):
-                if(self.coieficOf(one_hop_local, p.nodes)):
+                if(self.coieficOf(one_hop_local, p.nodes, percentt)):
                     self.isQuasi(p)
                 if len(p.candidate) > 0:
                     tempNodes = p.nodes[:]
                     tempNodes.extend(p.candidate)
                     pat1 = Pattern(tempNodes, [])
-                    if(self.coieficOf(one_hop_local, pat1.nodes)):
+                    if(self.coieficOf(one_hop_local, pat1.nodes, percentt)):
                         self.isQuasi(pat1)
 
 

@@ -15,20 +15,18 @@ class QuasiClick():
     percent = 0
     def main(self):
         global percent
-        colors = ["blue", "green", "yellow", "purple", "orange", "white"]
+        colors = ["blue", "green", "yellow", "purple", "orange", "white", "gray", "cyan", "sienna", "coral", "plum"]
         percent = float (input("Enter the quasi percentage\n"))
-        file1 = open('C:\\Users\\Tom\\PycharmProjects\\Quasi\\HcNetwork.txt', 'r')
-        g = igraph.Graph.Read_Ncol(file1,names=True,directed=False,weights=False)
+        num_threads = int (input("Enter the number of threads\n"))
+
+        file1 = open('C:\\Users\\Tom\\PycharmProjects\\Quasi\\poop.txt', 'r')
+        g = igraph.Graph.Read_Ncol(file1,names=True, directed=False, weights=False)
         file1.close()
         one_hop = g.get_adjacency().data
         one_h = numpy.array(one_hop)
         two_hop = numpy.zeros((len(one_h[0]), len(one_h[0])))
-        '''
-        for i in one_hop:
-            for j in i:
-                print(j, " ", end="")
-            print("\n")
-        '''
+
+
         #this multiplies two arrays
         for row in range(0, len(one_hop[0])):
             for row2 in range(0, len(one_hop[0])):
@@ -44,7 +42,7 @@ class QuasiClick():
                     if(one_hop[i][j] == 1):
                         patty.candidate.append(j)
             self.pattyArray2Hop.append(patty)
-
+            print("TEst")
 
 
 
@@ -59,19 +57,19 @@ class QuasiClick():
                             self.pattyArray2Hop[i].candidate.sort()
 
 
-        '''
-        #display candidates for each node in graph that are 2 hop
-        for i in self.pattyArray2Hop:
-            for n in i.nodes:
-                print("Node: ", n)
-            for j in i.candidate:
-                print(j , " ", end="")
-            print("\n")
-        '''
+
         thread = []
 
-        for patt in self.pattyArray2Hop:
-            t = threading.Thread(target=self.findMaximized ,args =( patt,one_hop))
+        local_n =  int(len(one_hop) / num_threads)
+
+
+
+        for index in range(0, num_threads):
+            local_start = local_n * index
+            local_stop = (local_n * index) + local_n
+            if(index == num_threads - 1):
+                local_stop = len(one_hop) - 1
+            t = threading.Thread(target= self.thread_maximized, args=(local_start, local_stop, one_hop))
             thread.append(t)
             t.start()
             #self.findMaximized(patt, one_hop)
@@ -84,16 +82,6 @@ class QuasiClick():
                 print(node," ", end="")
             print("\n")
 
-        #display candidates for each node in maximized
-        '''
-        for patttt in self.maximizedArray:
-            print("\nNodes: ", end="")
-            for nod in patttt.nodes:
-                print(nod, " ", end="")
-            print("\nCandidates: ", end="")
-            for can in patttt.candidate:
-                print(can, " ", end="")
-        '''
         #display graph with iGraph
         layout = g.layout("kk")
         #create labels
@@ -121,11 +109,21 @@ class QuasiClick():
         g.vs['color']= myColours
         igraph.plot(g, layout=layout, vertex_label=label)
 
+
+
+    def thread_maximized(self, start, stop, one_hoppy_hop):
+        for i in range(start, stop):
+            print("index: ", i, " Start: ", start, " Stop: ", stop)
+            self.findMaximized( self.pattyArray2Hop[i], one_hoppy_hop)
+
+
+
+
+
     #Finds the Clustering Coefficient of the nodes that are passed to it
     def coieficOf(self, adjacency_mat, nodes):
         TOTAL = 0
         top = 0
-
         # this takes each node and finds the correlation coefficient and adds it to the total
         for i in nodes:
             row = RowFound(i, [])
@@ -133,7 +131,6 @@ class QuasiClick():
             for index in range(0, len(adjacency_mat[0])):
                 if adjacency_mat[i][index] == 1 and index in nodes:
                     row.candidate.append(index)
-
             top = 0
             length_of_row = 0
             #calculates how many neighbors are friends
@@ -150,8 +147,6 @@ class QuasiClick():
             bottom = ( length_of_row * (length_of_row - 1))
             if bottom == 0:
                 bottom = 1
-
-
             tots =  ((top/2) / (bottom / 2))
 
             #calculates the correlation coefficient for the node and saves it to TOTAL
@@ -164,6 +159,10 @@ class QuasiClick():
             return True
         else:
             return False
+
+
+
+
 
 
     #check if each node in the maximal clique is up to our standards in percentage

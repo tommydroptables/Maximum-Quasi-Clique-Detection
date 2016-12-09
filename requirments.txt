@@ -1,0 +1,6 @@
+# To install igraph i first need to run:
+#	sudo apt-get install libxml2
+#	sudo apt-get install libxml2-dev --upgrade
+python-igraph
+numpy
+cairocffi

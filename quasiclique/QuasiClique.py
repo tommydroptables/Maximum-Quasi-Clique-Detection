@@ -33,7 +33,7 @@ class QuasiClique():
         """
         global percent
 
-        with open('data/HcNetwork.txt', 'r') as file1:
+        with open('data/sample.txt', 'r') as file1:
             g = igraph.Graph.Read_Ncol(file1, names=True, directed=False, weights=False)
 
         one_hop = g.get_adjacency().data
@@ -82,7 +82,6 @@ class QuasiClique():
             t = threading.Thread(target= self.thread_maximized, args=(local_start, local_stop, one_hop))
             thread.append(t)
             t.start()
-            self.findMaximized(patt, one_hop)
 
         for j in thread:
             j.join()
@@ -201,9 +200,9 @@ class QuasiClique():
 
             pat = Pattern(pnodes_recursive, list(self.findIntersection(p.candidate, candidate_of_candidate)))
             self.findMaximized(pat, one_hop_local)
-
+            #print("length: ", len(p.candidate))
             if(len(self.findIntersection(p.candidate, test1)) == 0):
-
+            #if self.coieficOf( one_hop_local, p.nodes):
                 if(self.coieficOf(one_hop_local, p.nodes)):
                     self.isQuasi(p)
                 if len(p.candidate) > 0:
